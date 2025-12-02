@@ -10,7 +10,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import com.c9cyber.app.domain.smartcard.SmartCardServiceImpl
 import com.c9cyber.app.presentation.navigation.Screen
 import com.c9cyber.app.presentation.screens.home.HomeScreen
+import com.c9cyber.app.presentation.screens.home.HomeScreenViewModel
 import com.c9cyber.app.presentation.screens.service.ServiceMenuScreen
+import com.c9cyber.app.presentation.screens.settings.SettingScreenViewModel
+import com.c9cyber.app.presentation.screens.settings.SettingsScreen
 import com.c9cyber.app.presentation.screens.standby.StandbyScreenViewModel
 import com.c9cyber.app.presentation.screens.standby.StandbyScreens
 import com.c9cyber.app.presentation.theme.AppTypography
@@ -21,6 +24,8 @@ fun main() = application {
 
     val smartCardService = remember { SmartCardServiceImpl() }
     val standbyViewModel = remember { StandbyScreenViewModel(smartCardService) }
+    val homeViewModel = remember { HomeScreenViewModel(smartCardService) }
+    val settingViewModel = remember { SettingScreenViewModel(smartCardService) }
 
     LaunchedEffect(isLoggedIn) {
         if (isLoggedIn) {
@@ -80,12 +85,20 @@ fun main() = application {
                     when (currentMainScreen) {
                         Screen.Home -> {
                             HomeScreen(
+                                viewModel = homeViewModel,
                                 navigateTo = { screen -> currentMainScreen = screen },
                             )
                         }
 
                         Screen.Service -> {
                             ServiceMenuScreen(
+                                navigateTo = { screen -> currentMainScreen = screen }
+                            )
+                        }
+
+                        Screen.Settings -> {
+                            SettingsScreen(
+                                viewModel = settingViewModel,
                                 navigateTo = { screen -> currentMainScreen = screen }
                             )
                         }
