@@ -3,6 +3,7 @@ package com.c9cyber.app.presentation.screens.settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountCircle
@@ -11,8 +12,13 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,11 +26,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.c9cyber.app.presentation.components.ChangePinForm
 import com.c9cyber.app.presentation.components.PinDialog
+import com.c9cyber.app.presentation.components.UserInfoForm
 import com.c9cyber.app.presentation.navigation.Screen
 import com.c9cyber.app.presentation.theme.AccentColor
 import com.c9cyber.app.presentation.theme.BackgroundPrimary
 import com.c9cyber.app.presentation.theme.BackgroundSecondary
+import com.c9cyber.app.presentation.theme.DestructiveColor
 import com.c9cyber.app.presentation.theme.TextPrimary
 import kotlinx.coroutines.delay
 
@@ -34,6 +43,8 @@ fun SettingsScreen(
     navigateTo: (Screen) -> Unit
 ) {
     val state = viewModel.uiState
+    var selectedTabIndex by remember { mutableStateOf(0) }
+    val tabs = listOf("Thông tin cá nhân", "Thay đổi mã PIN")
 
     // Tự động ẩn thông báo thành công sau 3 giây
     LaunchedEffect(state.successMessage) {
@@ -51,9 +62,7 @@ fun SettingsScreen(
     ) {
         IconButton(
             onClick = { navigateTo(Screen.Home) },
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .size(48.dp)
+            modifier = Modifier.align(Alignment.TopStart).size(48.dp)
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -68,73 +77,57 @@ fun SettingsScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "CẬP NHẬT THÔNG TIN",
+                text = "CÀI ĐẶT",
                 color = AccentColor,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 2.sp
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-            HorizontalDivider(color = AccentColor.copy(alpha = 0.5f), thickness = 1.dp)
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // --- FORM NHẬP LIỆU ---
+            TabRow(
+                selectedTabIndex = selectedTabIndex,
+                containerColor = Color.Transparent,
+                contentColor = AccentColor,
+                indicator = { tabPositions ->
+                    TabRowDefaults.Indicator(
+                        Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                        color = AccentColor
+                    )
+                },
+                modifier = Modifier.width(500.dp)
+            ) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTabIndex == index,
+                        onClick = { selectedTabIndex = index },
+                        text = {
+                            Text(
+                                title,
+                                fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal,
+                                color = if (selectedTabIndex == index) AccentColor else Color.Gray
+                            )
+                        }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
             Card(
                 colors = CardDefaults.cardColors(containerColor = BackgroundSecondary),
-                modifier = Modifier.width(500.dp), // Giới hạn chiều rộng cho đẹp
+                modifier = Modifier.width(500.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    TextField(
-                        value = state.memberId,
-                        onValueChange = { viewModel.onMemberIdChange(it) },
-                        label = "Mã Hội Viên",
-                        icon = Icons.Default.Badge
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    TextField(
-                        value = state.username,
-                        onValueChange = { viewModel.onUsernameChange(it) },
-                        label = "Tên Tài Khoản",
-                        icon = Icons.Default.AccountCircle
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    TextField(
-                        value = state.fullName,
-                        onValueChange = { viewModel.onFullNameChange(it) },
-                        label = "Họ và Tên",
-                        icon = Icons.Default.Person
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    TextField(
-                        value = state.memberLevel,
-                        onValueChange = { viewModel.onLevelChange(it) },
-                        label = "Cấp Độ Thành Viên",
-                        icon = Icons.Default.Star
-                    )
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    // Nút Save
-                    Button(
-                        onClick = { viewModel.onSaveClicked() },
-                        colors = ButtonDefaults.buttonColors(containerColor = AccentColor),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.fillMaxWidth().height(50.dp)
-                    ) {
-                        Text(
-                            text = "LƯU THAY ĐỔI",
-                            color = Color.Black,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
-                        )
+                    if (selectedTabIndex == 0) {
+                        UserInfoForm(state, viewModel)
+                    } else {
+                        ChangePinForm(state, viewModel)
                     }
                 }
             }
@@ -155,7 +148,21 @@ fun SettingsScreen(
             }
         }
 
-        // --- PIN DIALOG OVERLAY ---
+        if (state.errorMessage != null && !state.showPinDialog) {
+            Surface(
+                color = DestructiveColor,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 20.dp)
+            ) {
+                Text(
+                    text = state.errorMessage,
+                    color = Color.White,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
         if (state.showPinDialog) {
             Box(
                 modifier = Modifier
@@ -173,6 +180,7 @@ fun SettingsScreen(
         }
     }
 }
+
 @Composable
 private fun TextField(
     value: String,

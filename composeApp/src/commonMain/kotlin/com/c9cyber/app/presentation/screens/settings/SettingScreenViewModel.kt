@@ -16,6 +16,10 @@ data class SettingUiState(
     val fullName: String = "",
     val memberLevel: String = "",
 
+    val oldPin: String = "",
+    val newPin: String = "",
+    val confirmNewPin: String = "",
+
     val showPinDialog: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
@@ -33,6 +37,7 @@ class SettingScreenViewModel(
     // APDU Config
     private val CLA_APPLET = 0x00.toByte()
     private val INS_VERIFY = 0x20.toByte()
+    private val INS_CHANGE_PIN = 0x21.toByte()
     private val INS_UPDATE_INFO = 0x50.toByte()
     private val INS_GET_INFO = 0x51.toByte()
 
@@ -52,7 +57,7 @@ class SettingScreenViewModel(
         uiState = uiState.copy(memberLevel = v)
     }
 
-    fun onSaveClicked() {
+    fun onSaveInfoClicked() {
         if (uiState.memberId.isBlank() || uiState.username.isBlank() ||
             uiState.fullName.isBlank() || uiState.memberLevel.isBlank()
         ) {
@@ -61,6 +66,31 @@ class SettingScreenViewModel(
         }
         // Hiện Dialog nhập PIN
         uiState = uiState.copy(showPinDialog = true, errorMessage = null)
+    }
+
+    fun onOldPinChange(v: String) {
+        if (v.length <= 8) uiState = uiState.copy(oldPin = v)
+    }
+
+    fun onNewPinChange(v: String) {
+        if (v.length <= 8) uiState = uiState.copy(newPin = v)
+    }
+
+    fun onConfirmPinChange(v: String) {
+        if (v.length <= 8) uiState = uiState.copy(confirmNewPin = v)
+    }
+
+    fun onChangePinClicked() {
+        if (uiState.oldPin.length < 4 || uiState.newPin.length < 4) {
+            uiState = uiState.copy(errorMessage = "Mã PIN phải từ 4-8 ký tự")
+            return
+        }
+        if (uiState.newPin != uiState.confirmNewPin) {
+            uiState = uiState.copy(errorMessage = "Mã PIN mới không trùng khớp")
+            return
+        }
+
+        performChangePin()
     }
 
     fun onPinDismiss() {
@@ -108,6 +138,67 @@ class SettingScreenViewModel(
                     }
                 }
 
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    uiState = uiState.copy(isLoading = false, errorMessage = "Lỗi kết nối: ${e.message}")
+                }
+            }
+        }
+    }
+
+    private fun performChangePin() {
+        viewModelScope.launch {
+            uiState = uiState.copy(isLoading = true, errorMessage = null)
+            try {
+                // 1. Verify Old PIN
+                val oldPinBytes = uiState.oldPin.toByteArray()
+                val verifyApdu = byteArrayOf(CLA_APPLET, INS_VERIFY, 0x00, 0x00, oldPinBytes.size.toByte()) + oldPinBytes
+                val verifyRes = smartCardService.transmit(verifyApdu)
+                val verifySw = getStatusWord(verifyRes!!)
+
+                when (verifySw) {
+                    0x9000 -> {
+
+                    }
+                    0x6982, 0x6983 -> {
+                        smartCardService.disconnect()
+                        withContext(Dispatchers.Main) {
+                            uiState = uiState.copy(isLoading = false)
+                        }
+                        return@launch
+                    }
+                    else -> {
+                        val msg = if ((verifySw ushr 8) == 0x63) {
+                            "Mã PIN cũ không đúng! (Còn ${verifySw and 0x0F} lần)"
+                        } else {
+                            "Lỗi xác thực: ${Integer.toHexString(verifySw)}"
+                        }
+                        withContext(Dispatchers.Main) {
+                            uiState = uiState.copy(isLoading = false, errorMessage = msg)
+                        }
+                        return@launch
+                    }
+                }
+
+                // 2. Change to New PIN
+                val newPinBytes = uiState.newPin.toByteArray()
+                val changeApdu = byteArrayOf(CLA_APPLET, INS_CHANGE_PIN, 0x00, 0x00, newPinBytes.size.toByte()) + newPinBytes
+                val changeRes = smartCardService.transmit(changeApdu)
+                val changeSw = getStatusWord(changeRes!!)
+
+                if (changeSw == 0x9000) {
+                    withContext(Dispatchers.Main) {
+                        uiState = uiState.copy(
+                            isLoading = false,
+                            successMessage = "Đổi mã PIN thành công!",
+                            oldPin = "", newPin = "", confirmNewPin = ""
+                        )
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        uiState = uiState.copy(isLoading = false, errorMessage = "Lỗi đổi PIN: ${Integer.toHexString(changeSw)}")
+                    }
+                }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     uiState = uiState.copy(isLoading = false, errorMessage = "Lỗi kết nối: ${e.message}")
