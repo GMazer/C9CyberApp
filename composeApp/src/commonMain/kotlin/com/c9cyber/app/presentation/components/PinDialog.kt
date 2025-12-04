@@ -22,10 +22,14 @@ import com.c9cyber.app.presentation.theme.TextPrimary
 
 @Composable
 fun PinDialog(
+    errorMessage: String? = null,
+    isLoading: Boolean = false,
     onDismissRequest: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
     var pin by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) { pin = "" }
 
     Dialog(onDismissRequest = onDismissRequest) {
         Surface(
@@ -39,20 +43,27 @@ fun PinDialog(
             ) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Nhập mã pin",
+                    text = "Nhập mã PIN",
                     color = TextPrimary,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
+
                 Spacer(modifier = Modifier.height(24.dp))
 
                 OutlinedTextField(
                     value = pin,
-                    onValueChange = { if (it.length <= 6) pin = it },
-                    placeholder = { Text("******") },
+                    onValueChange = {
+                        // Chỉ cho phép nhập số và tối đa 8 ký tự (chuẩn JavaCard)
+                        if (it.length <= 8 && it.all { char -> char.isDigit() }) {
+                            pin = it
+                        }
+                    },
+                    placeholder = { Text("******", color = TextPrimary.copy(alpha = 0.3f)) },
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                     singleLine = true,
+                    enabled = !isLoading, // Khóa khi đang load
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = AccentColor,
                         unfocusedBorderColor = TextPrimary.copy(alpha = 0.5f),
@@ -60,9 +71,21 @@ fun PinDialog(
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary,
                         unfocusedContainerColor = Color.Transparent,
-                        focusedContainerColor = Color.Transparent
-                    )
+                        focusedContainerColor = Color.Transparent,
+                        disabledTextColor = Color.Gray,
+                        disabledBorderColor = Color.Gray.copy(alpha = 0.3f)
+                    ),
+                    modifier = Modifier.fillMaxWidth()
                 )
+
+                if (errorMessage != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = errorMessage,
+                        color = DestructiveColor,
+                        fontSize = 14.sp
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(32.dp))
 
@@ -74,17 +97,28 @@ fun PinDialog(
                         onClick = onDismissRequest,
                         modifier = Modifier.weight(1f),
                         border = BorderStroke(1.dp, DestructiveColor),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(8.dp),
+                        enabled = !isLoading
                     ) {
-                        Text("Huỷ", color = DestructiveColor)
+                        Text("Huỷ", color = if(isLoading) Color.Gray else DestructiveColor)
                     }
+
                     OutlinedButton(
                         onClick = { onConfirm(pin) },
                         modifier = Modifier.weight(1f),
-                        border = BorderStroke(1.dp, AccentColor),
-                        shape = RoundedCornerShape(8.dp)
+                        border = BorderStroke(1.dp, if (isLoading) Color.Gray else AccentColor),
+                        shape = RoundedCornerShape(8.dp),
+                        enabled = !isLoading && pin.isNotEmpty()
                     ) {
-                        Text("OK", color = AccentColor)
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = AccentColor,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("OK", color = if (pin.isEmpty()) Color.Gray else AccentColor)
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))

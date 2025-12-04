@@ -9,6 +9,7 @@ plugins {
 
 kotlin {
     jvm("desktop")
+    jvmToolchain(17)
     
     sourceSets {
         commonMain.dependencies {

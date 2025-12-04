@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,7 +23,17 @@ import com.c9cyber.app.presentation.theme.BackgroundPrimary
 import com.c9cyber.app.presentation.theme.BackgroundSecondary
 
 @Composable
-fun HomeScreen(navigateTo: (Screen) -> Unit) {
+fun HomeScreen(
+    viewModel: HomeScreenViewModel,
+    navigateTo: (Screen) -> Unit
+) {
+
+    val state = viewModel.uiState
+
+    LaunchedEffect(Unit) {
+        viewModel.loadUserInfo()
+    }
+
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         val isExpanded = maxWidth > 800.dp
         val sidebarWidth by animateDpAsState(if (isExpanded) 300.dp else 90.dp)
@@ -37,7 +48,7 @@ fun HomeScreen(navigateTo: (Screen) -> Unit) {
                     .padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                UserProfileCard(isExpanded = isExpanded)
+                UserProfileCard(user = state.user, isExpanded = isExpanded)
                 TimeStatusPanel(isExpanded = isExpanded)
                 Divider(color = AccentColor.copy(alpha = 0.3f), thickness = 1.dp)
                 SidebarMenu(isExpanded = isExpanded, navigateTo = navigateTo)
