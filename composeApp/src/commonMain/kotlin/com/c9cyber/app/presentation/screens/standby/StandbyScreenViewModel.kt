@@ -93,6 +93,7 @@ class StandbyScreenViewModel(
                             print(e)
                         }
                     }
+                    delay(1000)
                 }
 
 
