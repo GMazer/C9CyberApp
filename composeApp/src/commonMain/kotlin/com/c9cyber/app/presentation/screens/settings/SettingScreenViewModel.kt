@@ -87,6 +87,11 @@ class SettingScreenViewModel(
             return
         }
 
+        if (uiState.newPin == uiState.oldPin) {
+            uiState = uiState.copy(errorMessage = "Mã PIN mới không được trùng mã pin cũ")
+            return
+        }
+
         performChangePin()
     }
 
