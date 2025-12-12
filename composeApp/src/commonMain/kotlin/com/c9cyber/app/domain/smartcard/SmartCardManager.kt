@@ -222,7 +222,7 @@ class SmartCardManager(
 
             // 2. Update Info
             val rawString = "${userInfo.id}|${userInfo.userName}|${userInfo.name}|${userInfo.level.name}"
-            val dataBytes = rawString.toByteArray(Charsets.US_ASCII)
+            val dataBytes = rawString.toByteArray(Charsets.UTF_8)
 
             // APDU: 00 50 00 00 Lc [Data]
             val apdu = byteArrayOf(AppletCLA, INS.SetInfo, 0x00, 0x00, dataBytes.size.toByte()) + dataBytes

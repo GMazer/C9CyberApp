@@ -59,7 +59,7 @@ fun UserProfileCard(
                         Column(verticalArrangement = Arrangement.Center) {
 
                             Text(
-                                text = user.name,
+                                text = user.userName,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = TextPrimary,
