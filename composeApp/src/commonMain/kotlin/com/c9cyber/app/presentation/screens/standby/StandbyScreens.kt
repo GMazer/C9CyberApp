@@ -17,6 +17,7 @@ import com.c9cyber.app.presentation.components.PinDialog
 import com.c9cyber.app.presentation.components.StandbyStatusView
 import com.c9cyber.app.presentation.theme.AccentColor
 import com.c9cyber.app.presentation.theme.BackgroundPrimary
+import com.c9cyber.app.utils.MockSmartCardTransport
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
@@ -81,35 +82,9 @@ fun StandbyScreens(
 @Composable
 @Preview
 private fun preview() {
-    val smartCardTransport = MockCardTransport()
+    val smartCardTransport = MockSmartCardTransport()
     val smartCardMonitor = SmartCardMonitor(smartCardTransport)
     val viewModel = StandbyScreenViewModel(SmartCardManager(smartCardTransport, smartCardMonitor))
     StandbyScreens(viewModel, {})
-}
-
-private class MockCardTransport() : SmartCardTransport {
-    override fun listReaders(): MutableList<String?> {
-        TODO("Not yet implemented")
-    }
-
-    override fun isCardPresent(terminalName: String?): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun connect(terminalName: String?): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun transmit(apduBytes: ByteArray): ByteArray {
-        TODO("Not yet implemented")
-    }
-
-    override fun disconnect() {
-        TODO("Not yet implemented")
-    }
-
-    override fun isConnected(): Boolean {
-        TODO("Not yet implemented")
-    }
 }
 
