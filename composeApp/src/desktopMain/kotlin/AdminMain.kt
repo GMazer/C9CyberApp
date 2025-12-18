@@ -1,4 +1,3 @@
-import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -10,6 +9,8 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import com.c9cyber.admin.domain.AdminSmartCardManager
 import com.c9cyber.admin.presentation.AdminDashboard
+import com.c9cyber.app.data.api.ApiService
+import com.c9cyber.app.data.api.createHttpClient
 import com.c9cyber.app.domain.smartcard.SmartCardMonitor
 import com.c9cyber.app.domain.smartcard.SmartCardTransportImpl
 import com.c9cyber.app.presentation.theme.AppTypography
@@ -18,6 +19,9 @@ fun main() = application {
     val transport = remember { SmartCardTransportImpl() }
     val monitor = remember { SmartCardMonitor(transport) }
     val manager = remember { AdminSmartCardManager(transport, monitor) }
+
+    val httpClient = remember { createHttpClient() }
+    val apiHandler = remember { ApiService(httpClient) }
 
     Window(
         onCloseRequest = ::exitApplication,
@@ -29,7 +33,7 @@ fun main() = application {
         resizable = false
     ) {
         MaterialTheme(typography = AppTypography) {
-            AdminDashboard(manager)
+            AdminDashboard(manager, apiHandler)
         }
     }
 }

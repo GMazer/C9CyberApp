@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.c9cyber.admin.domain.AdminSmartCardManager
 import com.c9cyber.admin.domain.ReaderStatus
 import com.c9cyber.admin.presentation.viewmodel.UnblockCardScreenViewModel
+import com.c9cyber.app.data.api.ApiService
 import com.c9cyber.app.domain.smartcard.SmartCardMonitor
 import com.c9cyber.app.presentation.admincomponents.CardStatusBanner
 import com.c9cyber.app.presentation.components.LogoSection
@@ -36,9 +37,12 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 enum class AdminScreen { INIT, UNBLOCK }
 
 @Composable
-fun AdminDashboard(manager: AdminSmartCardManager) {
+fun AdminDashboard(
+    manager: AdminSmartCardManager,
+    apiService: ApiService
+) {
     val dashboardVM = remember { DashboardViewModel(manager) }
-    val initVM = remember { InitCardScreenViewModel(manager) }
+    val initVM = remember { InitCardScreenViewModel(manager, apiService) }
     val unblockVM = remember { UnblockCardScreenViewModel(manager) }
 
     val readerStatus by dashboardVM.readerStatus.collectAsState()
@@ -106,5 +110,5 @@ fun SidebarItem(text: String, icon: ImageVector, isSelected: Boolean, onClick: (
 private fun Preview() {
     val mockSmartCardTransport = MockSmartCardTransport()
     val mockMonitor = SmartCardMonitor(mockSmartCardTransport)
-    AdminDashboard(AdminSmartCardManager(mockSmartCardTransport, mockMonitor))
+//    AdminDashboard(AdminSmartCardManager(mockSmartCardTransport, mockMonitor))
 }

@@ -9,6 +9,8 @@ object INS {
     val ChangePin = 0x21.toByte()
     val VerifyPin = 0x20.toByte()
     val UnblockPin = 0x2C.toByte()
+    val GetPubKey = 0x30.toByte()
+    val SignRSA = 0x31.toByte()
     val SetInfo = 0x50.toByte()
     val GetInfo = 0x51.toByte()
 }

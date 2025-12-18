@@ -142,4 +142,32 @@ class AdminSmartCardManager(
             AdminResetResult.Error("Exception: ${e.message}")
         }
     }
+
+    fun getPublicKeyModulus(): ByteArray? {
+        return try {
+            val apdu = byteArrayOf(0x00.toByte(), INS.GetPubKey, 0x00, 0x00, 0x80.toByte())
+            val response = transport.transmit(apdu)
+
+            if (response == null || response.size < 2) return null
+
+            // Extract Status Word (last 2 bytes)
+            val sw1 = response[response.size - 2].toInt() and 0xFF
+            val sw2 = response[response.size - 1].toInt() and 0xFF
+            val sw = (sw1 shl 8) or sw2
+
+            if (sw == 0x9000) {
+                // SUCCESS: Strip the 2-byte status word and return only the Modulus
+                // For RSA 2048, this should result in exactly 256 bytes
+                val modulus = response.copyOfRange(0, response.size - 2)
+                println("Modulus received. Size: ${modulus.size} bytes")
+                modulus
+            } else {
+                println("Card returned error SW: ${Integer.toHexString(sw)}")
+                null
+            }
+        } catch (e: Exception) {
+            println("Error reading modulus: ${e.message}")
+            null
+        }
+    }
 }

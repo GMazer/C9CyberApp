@@ -6,6 +6,8 @@ import androidx.compose.runtime.setValue
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils
 import com.c9cyber.admin.domain.AdminSmartCardManager
 import com.c9cyber.admin.domain.AdminWriteResult
+import com.c9cyber.app.data.api.ApiService
+import com.c9cyber.app.utils.KeyUtils
 import kotlinx.coroutines.*
 
 data class InitUiState(
@@ -20,7 +22,10 @@ data class InitUiState(
     val isSuccess: Boolean = false
 )
 
-class InitCardScreenViewModel(private val manager: AdminSmartCardManager) {
+class InitCardScreenViewModel(
+    private val manager: AdminSmartCardManager,
+    private val apiService: ApiService
+) {
     var uiState by mutableStateOf(InitUiState())
         private set
 
@@ -49,31 +54,59 @@ class InitCardScreenViewModel(private val manager: AdminSmartCardManager) {
         scope.launch {
             updateState { it.copy(isLoading = true) }
 
-            val id = NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR, NanoIdUtils.DEFAULT_ALPHABET, 10)
-
-            val result = manager.initializeCard(
-                id, uiState.username, uiState.fullname, uiState.level
+            val nanoId = NanoIdUtils.randomNanoId(
+                NanoIdUtils.DEFAULT_NUMBER_GENERATOR,
+                NanoIdUtils.DEFAULT_ALPHABET, 10
             )
 
-            updateState { state ->
-                when (result) {
-                    is AdminWriteResult.Success -> state.copy(
-                        isLoading = false,
-                        showDialog = true,
-                        dialogTitle = "Thành Công",
-                        dialogMessage = "Thẻ đã được khởi tạo!",
-                        isSuccess = true,
-                        id = "", username = "", fullname = ""
-                    )
-                    is AdminWriteResult.Error -> state.copy(
-                        isLoading = false,
-                        showDialog = true,
-                        dialogTitle = "Lỗi",
-                        dialogMessage = result.message,
-                        isSuccess = false
-                    )
-                }
+            val cardResult = manager.initializeCard(
+                nanoId, uiState.username, uiState.fullname, uiState.level
+            )
+
+            if (cardResult is AdminWriteResult.Error) {
+                showDialog("Lỗi Ghi Thẻ", cardResult.message, false)
+                updateState { it.copy(isLoading = false) }
+                return@launch
             }
+
+            val modulus = manager.getPublicKeyModulus()
+            if (modulus == null) {
+                showDialog("Lỗi", "Không thể đọc Public Key từ thẻ.", false)
+                updateState { it.copy(isLoading = false) }
+                return@launch
+            }
+
+            val pemKey = KeyUtils.convertModulusToPem(modulus)
+
+            val apiSuccess = apiService.registerUser(nanoId, pemKey)
+
+            if (apiSuccess) {
+                showDialog(
+                    "Thành Công",
+                    "Thẻ và Server đã được đồng bộ!\nID: $nanoId",
+                    true
+                )
+                // Clear form on success
+                updateState { it.copy(id = "", username = "", fullname = "", isLoading = false) }
+            } else {
+                showDialog(
+                    "Lỗi Server",
+                    "Thẻ đã ghi thành công nhưng không thể đăng ký lên hệ thống.",
+                    false
+                )
+                updateState { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+    private suspend fun showDialog(title: String, message: String, success: Boolean) {
+        updateState {
+            it.copy(
+                showDialog = true,
+                dialogTitle = title,
+                dialogMessage = message,
+                isSuccess = success
+            )
         }
     }
 
