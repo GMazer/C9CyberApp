@@ -21,6 +21,7 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             // Thêm các thư viện material icons và graphics
             implementation(compose.materialIconsExtended)
+            implementation(libs.jnanoid)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

@@ -3,13 +3,10 @@ package com.c9cyber.app.presentation.screens.admin.initcard
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.aventrix.jnanoid.jnanoid.NanoIdUtils
 import com.c9cyber.admin.domain.AdminSmartCardManager
 import com.c9cyber.admin.domain.AdminWriteResult
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 
 data class InitUiState(
     val id: String = "",
@@ -51,9 +48,11 @@ class InitCardScreenViewModel(private val manager: AdminSmartCardManager) {
 
         scope.launch {
             updateState { it.copy(isLoading = true) }
-            
+
+            val id = NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR, NanoIdUtils.DEFAULT_ALPHABET, 10)
+
             val result = manager.initializeCard(
-                uiState.id, uiState.username, uiState.fullname, uiState.level
+                id, uiState.username, uiState.fullname, uiState.level
             )
 
             updateState { state ->
