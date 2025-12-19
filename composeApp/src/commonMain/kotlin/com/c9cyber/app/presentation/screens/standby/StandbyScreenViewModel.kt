@@ -3,6 +3,7 @@ package com.c9cyber.app.presentation.screens.standby
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.c9cyber.app.data.repository.AuthRepository
 import com.c9cyber.app.domain.smartcard.CardPresenceStatus
 import com.c9cyber.app.domain.smartcard.PinVerifyResult
 import com.c9cyber.app.domain.smartcard.SmartCardManager
@@ -27,6 +28,7 @@ data class StandbyUiState(
 
 class StandbyScreenViewModel(
     val smartCardManager: SmartCardManager,
+    val authRepository: AuthRepository
 ) {
     var uiState by mutableStateOf(StandbyUiState())
         private set
@@ -91,7 +93,20 @@ class StandbyScreenViewModel(
 
             when (val result = smartCardManager.verifyPin(pin)) {
                 is PinVerifyResult.Success -> {
-                    updateState { it.copy(status = StandbyStatus.Success, isLoading = false) }
+                    val memberInfo = smartCardManager.loadUserInfo()
+
+                    val authResult = authRepository.authenticate(memberInfo.id)
+
+                    authResult.onSuccess {
+                        updateState { it.copy(status = StandbyStatus.Success, isLoading = false) }
+                    }.onFailure { error ->
+                        updateState {
+                            it.copy(
+                                errorMessage = "Xác thực RSA thất bại: ${error.message}",
+                                isLoading = false
+                            )
+                        }
+                    }
                 }
 
                 is PinVerifyResult.CardLocked -> {

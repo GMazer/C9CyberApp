@@ -10,6 +10,9 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import com.c9cyber.app.data.api.ApiService
+import com.c9cyber.app.data.api.createHttpClient
+import com.c9cyber.app.data.repository.AuthRepository
 import com.c9cyber.app.domain.smartcard.SmartCardManager
 import com.c9cyber.app.domain.smartcard.SmartCardMonitor
 import com.c9cyber.app.domain.smartcard.SmartCardTransportImpl
@@ -37,8 +40,13 @@ fun main() = application {
         monitor = smartCardMonitor
     )
 
+    val httpClient = remember { createHttpClient() }
+    val apiHandler = remember { ApiService(httpClient) }
+    val authRepository = remember { AuthRepository(apiHandler, smartCardManager) }
+
+
     val standbyViewModel = remember(isLoggedIn) {
-        StandbyScreenViewModel(smartCardManager)
+        StandbyScreenViewModel(smartCardManager, authRepository)
     }
     val homeViewModel = remember(isLoggedIn)
     {
