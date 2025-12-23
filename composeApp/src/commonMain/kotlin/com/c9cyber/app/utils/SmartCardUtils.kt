@@ -3,6 +3,8 @@ package com.c9cyber.app.utils
 val AppletCLA = 0x00.toByte()
 val AppletAID = byteArrayOf(0x06, 0x03, 0x30, 0x26, 0x01, 0x17, 0x00)
 
+val MasterPin = "12345".toByteArray()
+
 
 object INS {
     val CheckLock = 0x22.toByte()
