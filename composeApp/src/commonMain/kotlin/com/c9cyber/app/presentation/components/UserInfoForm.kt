@@ -13,8 +13,10 @@ import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,14 +28,29 @@ fun UserInfoForm(
     state: SettingUiState,
     onFullNameChange: (String) -> Unit,
     onUserNameChange: (String) -> Unit,
+    onAvatarChange: (ImageBitmap) -> Unit,
     onEditClicked: () -> Unit,
     onCancelEditClicked: () -> Unit,
     onSaveInfoClicked: () -> Unit
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
     ) {
+
+        AvatarPicker(
+            image = state.avatarImageBitmap, // Ensure 'avatarImageBitmap' exists in SettingUiState
+            isEditing = state.isEditing,
+            onUploadClick = {
+                // Open the Native File Picker
+                val file = pickImageFromSystem()
+                if (file != null) {
+                    onAvatarChange(file) // Pass path to ViewModel
+                }
+            },
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
 
         TextField(
             value = state.fullName,

@@ -3,16 +3,21 @@ package com.c9cyber.app.utils
 val AppletCLA = 0x00.toByte()
 val AppletAID = byteArrayOf(0x06, 0x03, 0x30, 0x26, 0x01, 0x17, 0x00)
 
+val MasterPin = "12345".toByteArray()
+
 
 object INS {
     val CheckLock = 0x22.toByte()
     val ChangePin = 0x21.toByte()
     val VerifyPin = 0x20.toByte()
     val UnblockPin = 0x2C.toByte()
+    val ResetTry = 0x2D.toByte()
     val GetPubKey = 0x30.toByte()
     val SignRSA = 0x31.toByte()
     val SetInfo = 0x50.toByte()
     val GetInfo = 0x51.toByte()
+    val INS_GET_IMAGE_CHUNK: Byte = 0x52
+    val INS_UPLOAD_IMAGE_CHUNK: Byte = 0x53
 }
 
 fun getStatusWord(response: ByteArray): Int {

@@ -26,6 +26,11 @@ sealed class AdminResetResult {
     data class Error(val message: String) : AdminResetResult()
 }
 
+sealed class AdminResetTryResult {
+    data object Success : AdminResetTryResult()
+    data class Error(val message: String) : AdminResetTryResult()
+}
+
 class AdminSmartCardManager(
     private val transport: SmartCardTransport,
     private val monitor: SmartCardMonitor
@@ -108,7 +113,7 @@ class AdminSmartCardManager(
             if (getStatusWord(verifyResp) != 0x9000)
                 return AdminWriteResult.Error("Admin Auth Failed")
 
-            val rawData = "$id|$user|$name|$level"
+            val rawData = "$id|$user|$name|$level|"
             val payload = rawData.toByteArray(StandardCharsets.UTF_8)
 
             val cmd = byteArrayOf(AppletCLA, INS.SetInfo, 0x00, 0x00, payload.size.toByte()) + payload
@@ -121,6 +126,24 @@ class AdminSmartCardManager(
             }
         } catch (e: Exception) {
             AdminWriteResult.Error("Exception: ${e.message}")
+        }
+    }
+
+    fun resetTry(): AdminResetTryResult {
+        return try {
+            if (_readerStatus.value != ReaderStatus.Connected)
+                return AdminResetTryResult.Error("Card not connected")
+
+            val cmd = byteArrayOf(AppletCLA, INS.ResetTry, 0x00, 0x00)
+            val resp = transport.transmit(cmd)
+
+            if (getStatusWord(resp) == 0x9000) {
+                AdminResetTryResult.Success
+            } else {
+                AdminResetTryResult.Error("Reset Failed: SW=${Integer.toHexString(getStatusWord(resp))}")
+            }
+        } catch (e: Exception) {
+            AdminResetTryResult.Error("Exception: ${e.message}")
         }
     }
 

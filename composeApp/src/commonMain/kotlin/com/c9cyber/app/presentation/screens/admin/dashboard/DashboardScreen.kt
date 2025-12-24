@@ -18,6 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.c9cyber.admin.domain.AdminSmartCardManager
 import com.c9cyber.admin.domain.ReaderStatus
+import com.c9cyber.app.presentation.screens.admin.resetattempt.ResetAttemptScreen
+import com.c9cyber.admin.presentation.viewmodel.ResetAttemptScreenViewModel
 import com.c9cyber.admin.presentation.viewmodel.UnblockCardScreenViewModel
 import com.c9cyber.app.data.api.ApiService
 import com.c9cyber.app.domain.smartcard.SmartCardMonitor
@@ -34,7 +36,7 @@ import com.c9cyber.app.utils.MockSmartCardTransport
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 
-enum class AdminScreen { INIT, UNBLOCK }
+enum class AdminScreen { INIT, UNBLOCK, RESET }
 
 @Composable
 fun AdminDashboard(
@@ -44,6 +46,7 @@ fun AdminDashboard(
     val dashboardVM = remember { DashboardViewModel(manager) }
     val initVM = remember { InitCardScreenViewModel(manager, apiService) }
     val unblockVM = remember { UnblockCardScreenViewModel(manager) }
+    val resetVM = remember { ResetAttemptScreenViewModel(manager) }
 
     val readerStatus by dashboardVM.readerStatus.collectAsState()
     var currentScreen by remember { mutableStateOf(AdminScreen.INIT) }
@@ -73,6 +76,12 @@ fun AdminDashboard(
                 SidebarItem("Mở khóa thẻ", Icons.Default.LockOpen, currentScreen == AdminScreen.UNBLOCK) {
                     currentScreen = AdminScreen.UNBLOCK
                 }
+
+                Spacer(Modifier.height(8.dp))
+
+                SidebarItem("Reset lần thử", Icons.Default.LockOpen, currentScreen == AdminScreen.RESET) {
+                    currentScreen = AdminScreen.RESET
+                }
             }
 
             Box(modifier = Modifier.fillMaxSize()) {
@@ -80,6 +89,7 @@ fun AdminDashboard(
                 when (currentScreen) {
                     AdminScreen.INIT -> InitCardScreen(initVM, isReady)
                     AdminScreen.UNBLOCK -> UnblockCardScreen(unblockVM, isReady)
+                    AdminScreen.RESET -> ResetAttemptScreen(resetVM, isReady)
                 }
             }
         }

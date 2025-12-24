@@ -3,20 +3,24 @@ package com.c9cyber.app.presentation.screens.settings
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.ImageBitmap
 import com.c9cyber.app.domain.model.User
 import com.c9cyber.app.domain.model.UserLevel
 import com.c9cyber.app.domain.smartcard.ChangePinResult
 import com.c9cyber.app.domain.smartcard.SmartCardManager
 import com.c9cyber.app.domain.smartcard.UpdateInfoResult
+import com.c9cyber.app.utils.ImageUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import org.jetbrains.skia.Bitmap
 
 data class SettingUiState(
     val memberId: String = "",
     val username: String = "",
     val fullName: String = "",
+    val avatarImageBitmap: ImageBitmap? = null,
     val memberLevel: String = "",
 
     val oldPin: String = "",
@@ -49,6 +53,10 @@ class SettingScreenViewModel(
 
     fun onFullNameChange(v: String) {
         uiState = uiState.copy(fullName = v)
+    }
+
+    fun onAvatarChange(v: ImageBitmap){
+        uiState = uiState.copy(avatarImageBitmap = v)
     }
 
     fun onLevelChange(v: String) {
@@ -114,13 +122,27 @@ class SettingScreenViewModel(
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true, errorMessage = null)
 
+            // 1. Xử lý ảnh trong background thread (Resize & Compress)
+            // Gọi hàm mới trong ImageUtils
+            val finalAvatarBytes = ImageUtils.processFromComposeBitmap(uiState.avatarImageBitmap)
+
+            // Log kiểm tra
+            if (finalAvatarBytes != null) {
+                println(">>> VM: Đã nén ảnh xong. Size: ${finalAvatarBytes.size} bytes")
+                println(">>> VM: Header: ${finalAvatarBytes.take(5).joinToString(" ") { "%02X".format(it) }}")
+            } else {
+                println(">>> VM: Ảnh là NULL hoặc lỗi xử lý.")
+            }
+
             val userToUpdate = User(
                 id = uiState.memberId,
                 userName = uiState.username,
                 name = uiState.fullName,
+                avatar = finalAvatarBytes, // Truyền mảng byte đã xử lý vào
                 level = UserLevel.valueOf(uiState.memberLevel)
             )
 
+            // 2. Gửi xuống SmartCardManager
             when (val result = smartCardManager.updateUserInfo(userToUpdate, pin)) {
                 is UpdateInfoResult.Success -> {
                     uiState = uiState.copy(
@@ -130,7 +152,6 @@ class SettingScreenViewModel(
                         successMessage = "Lưu thành công: ${uiState.username}"
                     )
                 }
-
                 is UpdateInfoResult.CardLocked -> {
                     uiState = uiState.copy(
                         isLoading = false,
@@ -139,14 +160,12 @@ class SettingScreenViewModel(
                         errorMessage = "Thẻ đã bị khóa"
                     )
                 }
-
                 is UpdateInfoResult.WrongPin -> {
                     uiState = uiState.copy(
                         isLoading = false,
                         errorMessage = "Sai mã PIN! (Còn ${result.remainingTries} lần)"
                     )
                 }
-
                 is UpdateInfoResult.Error -> {
                     uiState = uiState.copy(
                         isLoading = false,
@@ -201,14 +220,25 @@ class SettingScreenViewModel(
             val user = smartCardManager.loadUserInfo()
 
             if (user.id.isNotEmpty()) {
+
+                val loadedAvatar = ImageUtils.bytesToImageBitmap(user.avatar)
+
                 uiState = uiState.copy(
                     memberId = user.id,
                     username = user.userName,
                     fullName = user.name,
+                    avatarImageBitmap = loadedAvatar,
                     memberLevel = user.level.name,
                     isLoading = false,
                     errorMessage = null
                 )
+
+                if (loadedAvatar != null) {
+                    println(">>> VM: Đã load ảnh lên UI thành công!")
+                } else {
+                    println(">>> VM: Không có ảnh hoặc ảnh lỗi.")
+                }
+
             } else {
                 uiState = uiState.copy(
                     isLoading = false,

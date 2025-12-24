@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.c9cyber.app.domain.model.User
 import com.c9cyber.app.presentation.theme.*
+import com.c9cyber.app.utils.ImageUtils.bytesToImageBitmap
 import com.c9cyber.app.utils.formatCurrency
 import kotlinproject.composeapp.generated.resources.Res
 import kotlinproject.composeapp.generated.resources.avatar
@@ -39,15 +40,31 @@ fun UserProfileCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = if (isExpanded) Arrangement.Start else Arrangement.Center
         ) {
-            Image(
-                painter = painterResource(Res.drawable.avatar),
-                contentDescription = "User Avatar",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(if (isExpanded) 64.dp else 48.dp)
-                    .clip(CircleShape)
-                    .border(2.dp, AccentColor, CircleShape)
-            )
+            val avatarBitmap = bytesToImageBitmap(user?.avatar)
+
+            if (avatarBitmap != null) {
+                // 1. Show Dynamic Image from Card
+                Image(
+                    bitmap = avatarBitmap,
+                    contentDescription = "User Avatar",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(if (isExpanded) 64.dp else 48.dp)
+                        .clip(CircleShape)
+                        .border(2.dp, AccentColor, CircleShape)
+                )
+            } else {
+                // 2. Show Default Placeholder (Fallback)
+                Image(
+                    painter = painterResource(Res.drawable.avatar),
+                    contentDescription = "Default Avatar",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(if (isExpanded) 64.dp else 48.dp)
+                        .clip(CircleShape)
+                        .border(2.dp, AccentColor, CircleShape)
+                )
+            }
 
 
             AnimatedVisibility(visible = isExpanded) {

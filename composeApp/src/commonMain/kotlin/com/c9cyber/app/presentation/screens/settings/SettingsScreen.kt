@@ -75,7 +75,7 @@ fun SettingsScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "CÀI ĐẶT",
+                text = "THÔNG TIN",
                 color = AccentColor,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
@@ -127,6 +127,7 @@ fun SettingsScreen(
                             state = state,
                             onFullNameChange = viewModel::onFullNameChange,
                             onUserNameChange = viewModel::onUsernameChange,
+                            onAvatarChange = viewModel::onAvatarChange,
                             onEditClicked = viewModel::onEditClicked,
                             onCancelEditClicked = viewModel::onCancelEditClicked,
                             onSaveInfoClicked = viewModel::onSaveInfoClicked

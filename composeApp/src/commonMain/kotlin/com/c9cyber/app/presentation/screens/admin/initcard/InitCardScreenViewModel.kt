@@ -7,6 +7,7 @@ import com.aventrix.jnanoid.jnanoid.NanoIdUtils
 import com.c9cyber.admin.domain.AdminSmartCardManager
 import com.c9cyber.admin.domain.AdminWriteResult
 import com.c9cyber.app.data.api.ApiService
+import com.c9cyber.app.utils.CreateUID
 import com.c9cyber.app.utils.KeyUtils
 import kotlinx.coroutines.*
 
@@ -54,6 +55,12 @@ class InitCardScreenViewModel(
         scope.launch {
             updateState { it.copy(isLoading = true) }
 
+//            val nanoId = NanoIdUtils.randomNanoId(
+//                NanoIdUtils.DEFAULT_NUMBER_GENERATOR,
+//                NanoIdUtils.DEFAULT_ALPHABET, 10
+//            )
+
+            val nanoId = CreateUID()
             val nanoId = NanoIdUtils.randomNanoId(
                 NanoIdUtils.DEFAULT_NUMBER_GENERATOR,
                 NanoIdUtils.DEFAULT_ALPHABET, 10
