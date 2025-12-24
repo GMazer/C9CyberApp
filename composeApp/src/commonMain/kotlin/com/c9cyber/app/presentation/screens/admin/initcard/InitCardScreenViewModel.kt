@@ -61,6 +61,10 @@ class InitCardScreenViewModel(
 //            )
 
             val nanoId = CreateUID()
+            val nanoId = NanoIdUtils.randomNanoId(
+                NanoIdUtils.DEFAULT_NUMBER_GENERATOR,
+                NanoIdUtils.DEFAULT_ALPHABET, 10
+            )
 
             val cardResult = manager.initializeCard(
                 nanoId, uiState.username, uiState.fullname, uiState.level

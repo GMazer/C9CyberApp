@@ -499,4 +499,22 @@ class SmartCardManager(
             null
         }
     }
+
+    fun signWithRSA(data: ByteArray): ByteArray? {
+        return try {
+            val header = byteArrayOf(AppletCLA, INS.SignRSA, 0x00, 0x00, data.size.toByte())
+            val apdu = header + data
+
+            val response = transport.transmit(apdu)
+            val sw = getStatusWord(response)
+
+            if (sw == 0x9000 && response != null) {
+                response.copyOfRange(0, response.size - 2)
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
 }
