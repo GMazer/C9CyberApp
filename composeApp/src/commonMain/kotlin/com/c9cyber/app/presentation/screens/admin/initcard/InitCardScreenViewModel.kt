@@ -9,6 +9,7 @@ import com.c9cyber.admin.domain.AdminWriteResult
 import com.c9cyber.app.data.api.ApiService
 import com.c9cyber.app.utils.CreateUID
 import com.c9cyber.app.utils.KeyUtils
+import com.c9cyber.app.utils.MasterPin
 import kotlinx.coroutines.*
 
 data class InitUiState(
@@ -63,7 +64,7 @@ class InitCardScreenViewModel(
             val nanoId = CreateUID()
 
             val cardResult = manager.initializeCard(
-                nanoId, uiState.username, uiState.fullname, uiState.level
+                nanoId, uiState.username, uiState.fullname, uiState.level, MasterPin
             )
 
             if (cardResult is AdminWriteResult.Error) {

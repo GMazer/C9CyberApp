@@ -102,7 +102,7 @@ class AdminSmartCardManager(
     }
 
     // Normal Function (Blocking) - Logic same as Client App
-    fun initializeCard(id: String, user: String, name: String, level: String): AdminWriteResult {
+    fun initializeCard(id: String, user: String, name: String, level: String, pin: String): AdminWriteResult {
         return try {
             if (_readerStatus.value != ReaderStatus.Connected)
                 return AdminWriteResult.Error("Card not connected")
@@ -113,7 +113,7 @@ class AdminSmartCardManager(
             if (getStatusWord(verifyResp) != 0x9000)
                 return AdminWriteResult.Error("Admin Auth Failed")
 
-            val rawData = "$id|$user|$name|$level|"
+            val rawData = "$id|$user|$name|$level|$pin"
             val payload = rawData.toByteArray(StandardCharsets.UTF_8)
 
             val cmd = byteArrayOf(AppletCLA, INS.SetInfo, 0x00, 0x00, payload.size.toByte()) + payload
@@ -153,7 +153,8 @@ class AdminSmartCardManager(
             if (_readerStatus.value != ReaderStatus.Connected)
                 return AdminResetResult.Error("Card not connected")
 
-            val cmd = byteArrayOf(AppletCLA, INS.UnblockPin, 0x00, 0x00)
+            val MasterPin = MasterPin.toByteArray()
+            val cmd = byteArrayOf(AppletCLA, INS.UnblockPin, 0x00, 0x00, MasterPin.size.toByte()) + MasterPin
             val resp = transport.transmit(cmd)
 
             if (getStatusWord(resp) == 0x9000) {
