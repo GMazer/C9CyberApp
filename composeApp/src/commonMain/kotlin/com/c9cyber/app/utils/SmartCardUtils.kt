@@ -18,6 +18,10 @@ object INS {
     val GetInfo = 0x51.toByte()
     val INS_GET_IMAGE_CHUNK: Byte = 0x52
     val INS_UPLOAD_IMAGE_CHUNK: Byte = 0x53
+    val Credit: Byte = 0x40.toByte()
+    val Debit: Byte = 0x41.toByte()
+    val GetBalance: Byte = 0x42.toByte()
+    val GetHistory: Byte = 0x43.toByte()
 }
 
 fun getStatusWord(response: ByteArray): Int {
