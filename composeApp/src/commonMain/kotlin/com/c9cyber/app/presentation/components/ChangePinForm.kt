@@ -25,34 +25,57 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.c9cyber.app.presentation.screens.settings.SettingScreenViewModel
 import com.c9cyber.app.presentation.screens.settings.SettingUiState
+import com.c9cyber.app.presentation.screens.standby.StandbyUiState
 import com.c9cyber.app.presentation.theme.AccentColor
 import com.c9cyber.app.presentation.theme.TextPrimary
 import kotlinproject.composeapp.generated.resources.Res
 
 @Composable
-fun ChangePinForm(
-    state: SettingUiState,
+fun <T> ChangePinForm(
+    state: T,
     onOldPinChange: (String) -> Unit,
     onNewPinChange: (String) -> Unit,
     onConfirmNewPinChange: (String) -> Unit,
     onChangePinClicked: () -> Unit,
 ) {
+    val oldPin: String
+    val newPin: String
+    val confirmNewPin: String
+    val isLoading: Boolean
+
+    when (state) {
+        is SettingUiState -> {
+            oldPin = state.oldPin
+            newPin = state.newPin
+            confirmNewPin = state.confirmNewPin
+            isLoading = state.isLoading
+        }
+        is StandbyUiState -> {
+            oldPin = state.oldPin
+            newPin = state.newPin
+            confirmNewPin = state.confirmNewPin
+            isLoading = state.isLoading
+        }
+        else -> {
+            oldPin = ""; newPin = ""; confirmNewPin = ""; isLoading = false
+        }
+    }
     PinTextField(
-        value = state.oldPin,
+        value = oldPin,
         onValueChange = onOldPinChange,
         label = "Mã PIN cũ"
     )
     Spacer(modifier = Modifier.height(16.dp))
 
     PinTextField(
-        value = state.newPin,
+        value = newPin,
         onValueChange = onNewPinChange,
         label = "Mã PIN mới"
     )
     Spacer(modifier = Modifier.height(16.dp))
 
     PinTextField(
-        value = state.confirmNewPin,
+        value = confirmNewPin,
         onValueChange = onConfirmNewPinChange,
         label = "Nhập lại mã PIN mới"
     )
@@ -64,9 +87,9 @@ fun ChangePinForm(
         colors = ButtonDefaults.buttonColors(backgroundColor = AccentColor),
         shape = RoundedCornerShape(8.dp),
         modifier = Modifier.fillMaxWidth().height(50.dp),
-        enabled = !state.isLoading
+        enabled = !isLoading
     ) {
-        if (state.isLoading) {
+        if (isLoading) {
             CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(24.dp))
         } else {
             Text("Đổi mã PIN", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)

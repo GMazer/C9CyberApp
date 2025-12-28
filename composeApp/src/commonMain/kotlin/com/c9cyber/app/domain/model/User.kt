@@ -9,6 +9,7 @@ data class User(
     val balance: Int = 0,
     val level: UserLevel = UserLevel.Bronze,
     val avatar: ByteArray? = null,
+    val isFistTimeLogin: Boolean = true,
     val totalUsableTime: Long = 0
 )
 

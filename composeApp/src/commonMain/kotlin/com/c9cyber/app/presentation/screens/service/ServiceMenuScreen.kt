@@ -61,7 +61,7 @@ fun ServiceMenuScreen(navigateTo: (Screen) -> Unit) {
             PinDialog(
                 onDismissRequest = { showPinDialog = false },
                 onConfirm = { pin ->
-                    // TODO: Xử lý logic xác thực mã pin ở đây
+                    TODO()
                     println("Pin entered: $pin")
                     showPinDialog = false
                 }

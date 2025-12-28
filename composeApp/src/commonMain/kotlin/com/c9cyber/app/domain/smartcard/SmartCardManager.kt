@@ -255,11 +255,11 @@ class SmartCardManager(
             val rawTextData = responseText.copyOfRange(0, responseText.size - 2)
             val textString = String(rawTextData, Charsets.UTF_8)
 
-            // Parse: ID | User | Name | Level |
+            // Parse: ID | User | Name | Level | FirstLogin
             // We look for separators explicitly to be safe
             val sections = textString.split("|")
 
-            if (sections.size < 4) {
+            if (sections.size < 5) {
                 println(">>> MANAGER: Dữ liệu text không đúng định dạng.")
                 return user
             }
@@ -268,6 +268,7 @@ class SmartCardManager(
             val username = sections[1]
             val name = sections[2]
             val levelString = sections[3]
+            val firstLogin = sections[4].isNotEmpty() && sections[4][0].code == 0x01
 
             println(">>> MANAGER: Text OK -> $username ($levelString)")
 
@@ -326,19 +327,25 @@ class SmartCardManager(
             println(">>> MANAGER: Tổng size ảnh tải được: ${rawImageBytes.size} bytes")
 
             // Clean PKCS7 Padding
-            val finalImage = removePadding(rawImageBytes)
-
-            // Log hex header for debugging
-            if (finalImage.isNotEmpty()) {
-                val header = finalImage.take(10).joinToString(" ") { "%02X".format(it) }
-                println(">>> MANAGER: Header ảnh: $header")
+            val finalImage = if (rawImageBytes.isNotEmpty()) {
+                removePadding(rawImageBytes)
             }
+            else {
+                null
+            }
+
+//            // Log hex header for debugging
+//            if (finalImage.isNotEmpty()) {
+//                val header = finalImage.take(10).joinToString(" ") { "%02X".format(it) }
+//                println(">>> MANAGER: Header ảnh: $header")
+//            }
 
             user = User(
                 id = memberId,
                 userName = username,
                 name = name,
                 level = UserLevel.valueOf(levelString),
+                isFistTimeLogin = firstLogin,
                 avatar = finalImage
             )
 
@@ -479,6 +486,50 @@ class SmartCardManager(
         } catch (e: Exception) {
             e.printStackTrace()
             UpdateInfoResult.Error("Lỗi kết nối: ${e.message}")
+        }
+    }
+
+    fun getBalance(): Int? {
+        return try {
+            val apdu = byteArrayOf(AppletCLA, INS.GetBalance, 0x00, 0x00)
+            val response = transport.transmit(apdu)
+            val sw = getStatusWord(response)
+
+            if (sw == 0x9000 && response.size >= 4) {
+                ((response[0].toInt() and 0xFF) shl 8) or (response[1].toInt() and 0xFF)
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun creditBalance(amount: Short): Boolean {
+        return try {
+            val data = byteArrayOf(
+                (amount.toInt() shr 8).toByte(),
+                (amount.toInt() and 0xFF).toByte()
+            )
+            val apdu = byteArrayOf(AppletCLA, INS.Credit, 0x00, 0x00, 0x02.toByte()) + data
+            val response = transport.transmit(apdu)
+            getStatusWord(response) == 0x9000
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    fun debitBalance(amount: Short): Boolean {
+        return try {
+            val data = byteArrayOf(
+                (amount.toInt() shr 8).toByte(),
+                (amount.toInt() and 0xFF).toByte()
+            )
+            val apdu = byteArrayOf(AppletCLA, INS.Debit, 0x00, 0x00, 0x02.toByte()) + data
+            val response = transport.transmit(apdu)
+            getStatusWord(response) == 0x9000
+        } catch (e: Exception) {
+            false
         }
     }
 

@@ -75,7 +75,7 @@ fun main() = application {
     if (!isLoggedIn) {
         val standbyWindowState = rememberWindowState(
             position = WindowPosition(Alignment.Center),
-            size = DpSize(600.dp, 400.dp)
+            size = DpSize(600.dp, 600.dp)
         )
 
         Window(
@@ -101,7 +101,7 @@ fun main() = application {
     if (isLoggedIn) {
         val mainWindowState = rememberWindowState(
             position = WindowPosition(Alignment.Center),
-            size = DpSize(1280.dp, 720.dp)
+            size = DpSize(1280.dp, 1000.dp)
         )
 
         var currentMainScreen by remember { mutableStateOf(Screen.Home) }

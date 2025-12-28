@@ -46,7 +46,7 @@ fun SidebarMenu(isExpanded: Boolean, navigateTo: (Screen) -> Unit) {
 
         SidebarMenuItem(
             painter = painterResource(Res.drawable.info),
-            text = "Cài đặt",
+            text = "Xem thông tin",
             isExpanded = isExpanded,
             onClick = { navigateTo(Screen.Settings) }
         )
